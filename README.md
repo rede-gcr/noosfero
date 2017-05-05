@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/samasti/noosfero.png?label=ready&title=Ready)](https://waffle.io/samasti/noosfero)
 [![Code Climate](https://codeclimate.com/github/Noosfero/noosfero.png)](https://codeclimate.com/github/Noosfero/noosfero)
 
 Noosfero - a web-based social platform
