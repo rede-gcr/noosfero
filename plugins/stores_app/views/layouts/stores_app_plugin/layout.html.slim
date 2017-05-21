@@ -4,15 +4,13 @@ html
 
   head
     title = profile.name
-
     = render 'layouts/stores_app_plugin/head'
 
   body
+    app
 
-    div class='layout-transparent mdl-layout mdl-js-layout'
+    = render 'layouts/stores_app_plugin/tags'
+    javascript:
+      window.profile = {name: #{profile.name.to_json}}
+      store.load()
 
-      = render 'layouts/stores_app_plugin/header'
-      = render 'layouts/stores_app_plugin/menu'
-
-      main class='mdl-layout__content'
-        = yield
