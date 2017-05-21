@@ -122,14 +122,22 @@ module Noosfero
     config.action_dispatch.session = {key: '_noosfero_session'}
     config.session_store :active_record_store, key: '_noosfero_session'
 
+    config.paths['config/routes.rb'] =
+      Dir['config/routes/*.rb'] +
+      Dir['config/routes/profile/*.rb'] +
+      Dir['config/routes/myprofile/*.rb'] +
+      Dir['config/routes/admin/*.rb'] +
+      Dir['{baseplugins,config/plugins}/*/config/routes**.rb'] +
+      Dir['config/routes/cms/*.rb']
+
+    config.paths['db/migrate'].concat Dir.glob("{baseplugins,config/plugins}/*/db/migrate")
+    config.i18n.load_path.concat Dir.glob("{baseplugins,config/plugins}/*/locales/*.{rb,yml}")
+
     # Set Time.zone default to the specified zone and make Active Record auto-convert to this zone.
     # Run "rake -D time" for a list of tasks for finding time zone names. Default is UTC.
     config.time_zone = File.read('/etc/timezone').split("\n").first
     # timezone varies for each request, see ApplicationController#set_time_zone
     config.active_record.default_timezone = :utc
-
-    config.paths['db/migrate'].concat Dir.glob("#{Rails.root}/{baseplugins,config/plugins}/*/db/migrate")
-    config.i18n.load_path.concat Dir.glob("#{Rails.root}/{baseplugins,config/plugins}/*/locales/*.{rb,yml}")
 
     config.middleware.use Noosfero::MultiTenancy::Middleware
 
