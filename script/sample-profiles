@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
-require File.dirname(__FILE__) + '/../config/environment'
+
+require_relative '../config/environment'
 require_relative '../lib/sample_data'
 include SampleData
 
@@ -111,7 +111,7 @@ User.where("login NOT LIKE '%%_template'").each do |user|
 end
 done
 
-people = $environment.people
+people = $environment.people.no_templates
 print "Creating some friendships: "
 rand(people.size * 3).times do
   from = people.sample

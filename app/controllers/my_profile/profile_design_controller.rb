@@ -24,41 +24,7 @@ class ProfileDesignController < BoxOrganizerController
   end
 
   def available_blocks
-    blocks = [ ArticleBlock, TagsBlock, RecentDocumentsBlock, ProfileInfoBlock, LinkListBlock, MyNetworkBlock, FeedReaderBlock, ProfileImageBlock, LocationBlock, SlideshowBlock, ProfileSearchBlock, HighlightsBlock, MenuBlock ]
-
-    blocks += plugins.dispatch(:extra_blocks)
-
-    # blocks exclusive to people
-    if profile.person?
-      blocks << FavoriteEnterprisesBlock
-      blocks << CommunitiesBlock
-      blocks << EnterprisesBlock
-      blocks += plugins.dispatch(:extra_blocks, :type => Person)
-    end
-
-    # blocks exclusive to communities
-    if profile.community?
-      blocks += plugins.dispatch(:extra_blocks, :type => Community)
-    end
-
-    # blocks exclusive for enterprises
-    if profile.enterprise?
-      blocks << DisabledEnterpriseMessageBlock
-      blocks << HighlightsBlock
-      blocks << FansBlock
-      blocks += plugins.dispatch(:extra_blocks, :type => Enterprise)
-    end
-
-    # block exclusive to profiles that have blog
-    if profile.has_blog?
-      blocks << BlogArchivesBlock
-    end
-
-    if @user_is_admin
-      blocks << RawHTMLBlock
-    end
-
-    blocks
+    profile.available_blocks(user)
   end
 
   def update_categories

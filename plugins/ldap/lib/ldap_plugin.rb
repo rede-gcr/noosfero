@@ -40,9 +40,9 @@ class LdapPlugin < Noosfero::Plugin
   end
 
   def alternative_authentication
-    login = context.params[:user][:login]
-    password = context.params[:user][:password]
-    ldap = LdapAuthentication.new(environment.ldap_plugin_attributes)
+    login = context.params[:login] || context.params[:user][:login]
+    password = context.params[:password] || context.params[:user][:password]
+    ldap = LdapAuthentication.new(context.environment.ldap_plugin_attributes)
 
     # try to authenticate
     begin

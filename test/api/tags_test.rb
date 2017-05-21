@@ -13,7 +13,7 @@ class TagsTest < ActiveSupport::TestCase
 
     get "/api/v1/articles/#{a.id}/tags?#{params.to_query}"
     json = JSON.parse(last_response.body)
-    assert_equal ['foo'], json
+    assert_equal ['name' => 'foo', 'count' => 1], json
   end
 
   should 'post article tags' do
@@ -35,20 +35,30 @@ class TagsTest < ActiveSupport::TestCase
     assert_equal [], a.reload.tag_list
   end
 
-  should 'get environment tags' do
-    person = fast_create(Person)
-    person.articles.create!(:name => 'article 1', :tag_list => 'first-tag')
-    person.articles.create!(:name => 'article 2', :tag_list => 'first-tag, second-tag')
-    person.articles.create!(:name => 'article 3', :tag_list => 'first-tag, second-tag, third-tag')
+  should 'get profile tags' do
+    profile = fast_create(Profile)
+    profile.tags.create! name: 'foo'
 
-    get '/api/v1/environment/tags'
+    get "/api/v1/profiles/#{profile.id}/tags?#{params.to_query}"
     json = JSON.parse(last_response.body)
-    assert_equal({ 'first-tag' => 3, 'second-tag' => 2, 'third-tag' => 1 }, json)
+    assert_equal ['name' => 'foo', 'count' => 1], json
   end
 
-  should 'get environment tags with status DEPRECATED' do
-    get '/api/v1/environment/tags'
-    assert_equal Api::Status::DEPRECATED, last_response.status
+  should 'post profile tags' do
+    login_api
+    profile = fast_create(Profile)
+
+    post "/api/v1/profiles/#{profile.id}/tags?#{params.to_query}&tags=foo"
+    assert_equal 201, last_response.status
+    assert_equal ['foo'], profile.reload.tag_list
+  end
+
+  should 'not post profile tags if not authenticated' do
+    profile = fast_create(Profile)
+
+    post "/api/v1/profiles/#{profile.id}/tags?#{params.to_query}&tags=foo"
+    assert_equal 401, last_response.status
+    assert_equal [], profile.reload.tag_list
   end
 
   should 'get environment tags for path environments' do
@@ -59,13 +69,13 @@ class TagsTest < ActiveSupport::TestCase
 
     get '/api/v1/environments/tags'
     json = JSON.parse(last_response.body)
-    json.map do |tag|
-      if tag['name'] == 'first-tag'
-        assert_equal(3, tag['count'])
-      elsif tag['name'] == 'second-tag'
-        assert_equal(2, tag['count'])
-      elsif tag['name'] == 'third-tag'
-        assert_equal(1, tag['count'])
+    json.each do |name, count|
+      if name == 'first-tag'
+        assert_equal(3, count)
+      elsif name == 'second-tag'
+        assert_equal(2, count)
+      elsif name == 'third-tag'
+        assert_equal(1, count)
       end
     end
   end
@@ -84,13 +94,13 @@ class TagsTest < ActiveSupport::TestCase
 
     get "/api/v1/environments/#{environment.id}/tags"
     json = JSON.parse(last_response.body)
-    json.map do |tag|
-      if tag['name'] == 'first-tag'
-        assert_equal(3, tag['count'])
-      elsif tag['name'] == 'second-tag'
-        assert_equal(2, tag['count'])
-      elsif tag['name'] == 'third-tag'
-        assert_equal(1, tag['count'])
+    json.each do |name, count|
+      if name == 'first-tag'
+        assert_equal(3, count)
+      elsif name == 'second-tag'
+        assert_equal(2, count)
+      elsif name == 'third-tag'
+        assert_equal(1, count)
       end
     end
   end

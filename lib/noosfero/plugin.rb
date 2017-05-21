@@ -583,7 +583,7 @@ class Noosfero::Plugin
   # own use in specific views
   def find_by_contents(asset, scope, query, paginate_options={}, options={})
     scope = scope.like_search(query, options) unless query.blank?
-    scope = scope.send(options[:filter]) unless options[:filter].blank?
+    scope = scope.send(options[:filter]) unless options[:filter].blank? || options[:filter] == 'more_relevant'
     {:results => scope.paginate(paginate_options)}
   end
 
@@ -640,6 +640,24 @@ class Noosfero::Plugin
   # returns = ['class1', 'class2']
   def html_tag_classes
     nil
+  end
+
+  # -> Displays the facets view side box
+  # returns = true or false
+  def search_facets?
+    false
+  end
+
+  # -> Adds reserved identifiers to profile
+  # returns = ['identifier1', 'identifier2']
+  def reserved_identifiers
+    []
+  end
+
+  # -> Adds new items to the user menu
+  # returns = [item1, item2]
+  def user_menu_items(user)
+    []
   end
 
   # -> Adds additional blocks to profiles and environments.
@@ -746,6 +764,3 @@ class Noosfero::Plugin
 
 end
 
-require 'noosfero/plugin/hot_spot'
-require 'noosfero/plugin/manager'
-require 'noosfero/plugin/settings'

@@ -10,6 +10,7 @@ class SearchController < PublicController
   before_filter :sanitize_params
   before_filter :redirect_asset_param, :except => [:assets, :suggestions]
   before_filter :load_category, :except => :suggestions
+  before_filter :load_tag, :except => :suggestions
   before_filter :load_search_assets, :except => :suggestions
   before_filter :load_query, :except => :suggestions
   before_filter :load_order, :except => :suggestions
@@ -134,16 +135,16 @@ class SearchController < PublicController
   def tags
     @tags_cache_key = "tags_env_#{environment.id.to_s}"
     if is_cache_expired?(@tags_cache_key)
-      @tags = environment.tag_counts
+      @tags = environment.environment_tags
     end
   end
 
   def tag
-    @tag = params[:tag]
     tag_str = @tag.kind_of?(Array) ? @tag.join(" ") : @tag.to_str
     @tag_cache_key = "tag_#{CGI.escape(tag_str)}_env_#{environment.id.to_s}_page_#{params[:npage]}"
     if is_cache_expired?(@tag_cache_key)
-      @searches[@asset] = {:results => environment.articles.tagged_with(@tag).paginate(paginate_options)}
+      send(:index)
+      @asset = :tag
     end
   end
 
@@ -172,6 +173,10 @@ class SearchController < PublicController
 
     @query = params[:query] || ''
     @empty_query = @category.nil? && @query.blank?
+  end
+
+  def load_tag
+    @tag = params[:tag]
   end
 
   def load_category
@@ -209,7 +214,7 @@ class SearchController < PublicController
     @titles = {}
     @enabled_searches.each do |key, name|
       @titles[key] = _(name)
-      @searching[key] = params[:action] == 'index' || params[:action] == key.to_s
+      @searching[key] = params[:action] == 'index' || params[:action] == 'tag' || params[:action] == key.to_s
     end
     @names = @titles if @names.nil?
   end
@@ -248,7 +253,9 @@ class SearchController < PublicController
   end
 
   def full_text_search
-    @searches[@asset] = find_by_contents(@asset, environment, @scope, @query, paginate_options, {:category => @category, :filter => @order, :template_id => params[:template_id]})
+    @searches[@asset] = find_by_contents(@asset, environment, @scope, @query, paginate_options,
+      {:category => @category, :tag => @tag, :filter => @order, :template_id => params[:template_id],
+       :facets => params[:facets], :periods => params[:periods]})
   end
 
   private

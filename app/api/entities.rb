@@ -80,11 +80,18 @@ module Api
       expose :parent, :using => CategoryBase, if: { parent: true }
       expose :children, :using => CategoryBase, if: { children: true }
       expose :image, :using => Image
-      expose :display_color
+      expose :display_color 
     end
 
     class Region < Category
       expose :parent_id
+    end
+
+    class BlockDefinition < Entity
+      expose :description
+      expose :short_description
+      expose :pretty_name, as: :name
+      expose :name, as: :type
     end
 
     class Block < Entity
@@ -97,6 +104,9 @@ module Api
         Entities.permissions_for_entity(block, options[:current_person], :allow_edit?)
       end
       expose :images, :using => Image
+      expose :definition do |block, options|
+        BlockDefinition.represent(block.class)
+      end
     end
 
     class Box < Entity
@@ -110,27 +120,26 @@ module Api
       expose :identifier, :name, :id
       expose :created_at, :format_with => :timestamp
       expose :updated_at, :format_with => :timestamp
+
       expose :additional_data do |profile, options|
-        hash ={}
-        profile.public_values.each do |value|
-          hash[value.custom_field.name]=value.value
-        end
+        hash = {}
+        profile.environment.send("all_custom_#{profile.type.downcase}_fields").each  do |field, settings|
+          if settings['active'].to_s == 'true'
+            field_privacy = profile.fields_privacy[field] || profile.fields_privacy[field.to_sym]
+            value = field_privacy == 'public' ? :anonymous : :private_content
+            if Entities.can_display_profile_field?(profile, options, { :field => field, permission: value })
+              hash[field] = profile.send('custom_field_value', field)
+            end
+          end    
+        end  
 
-        profile.public_fields.each do |field|
-          hash[field] = profile.send(field.to_sym)
-        end
-
-        private_values = profile.custom_field_values - profile.public_values
-        private_values.each do |value|
-          if Entities.can_display_profile_field?(profile,options)
-            hash[value.custom_field.name]=value.value
-          end
-        end
         hash
+
       end
       expose :image, :using => Image
       expose :top_image, :using => Image
       expose :region, :using => Region
+      expose :tag_list
       expose :type
       expose :custom_header
       expose :custom_footer
@@ -138,6 +147,9 @@ module Api
       expose :permissions do |profile, options|
         Entities.permissions_for_entity(profile, options[:current_person],
         :allow_post_content?, :allow_edit?, :allow_destroy?)
+      end
+      expose :theme do |profile, options|
+        profile.theme || profile.environment.theme
       end
     end
 
@@ -179,7 +191,7 @@ module Api
         community.admins.map{|admin| {"name"=>admin.name, "id"=>admin.id, "username" => admin.identifier}}
       end
       expose :categories, :using => Category
-      expose :members_count
+      expose :members_count, :closed
       expose :members, :if => lambda {|community, options| Entities.expose_optional_field?(:members, options)}
     end
 
@@ -307,10 +319,12 @@ module Api
       expose :permissions, if: lambda { |environment, options| options[:current_person].present? } do |environment, options|
         environment.permissions_for(options[:current_person])
       end
+      expose :theme
     end
 
     class Tag < Entity
       expose :name
+      expose :taggings_count, as: :count
     end
 
     class Activity < Entity
@@ -333,6 +347,9 @@ module Api
       expose :id
       expose :name
       expose :key
+      expose :assigned do |role, options|
+        (options[:person_roles] || []).include?(role)
+      end
     end
 
     class AbuseReport < Entity
@@ -355,5 +372,16 @@ module Api
         type_map.first.represent(domain.owner, options) unless type_map.nil?
       end
     end
+
+    class Response < Entity
+      expose :success
+      expose :code
+      expose :message
+    end
+
+    class Setting < Entity
+      expose :available_blocks, :using => BlockDefinition
+    end
+
   end
 end

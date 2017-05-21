@@ -1,2 +1,2 @@
-<%= search_page_title( _("Events at %s") % Environment.default.name, @category ) %>
+<%= search_page_title _("Events at %s") % Environment.default.name, category: @category, tag: @tag %>
 <%= render :partial => 'events/agenda' %>

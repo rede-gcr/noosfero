@@ -3,11 +3,8 @@
   $('#search-content').on('click', '.pagination a', function () {
     $.ajax({
       url: this.href,
-      beforeSend: function(){$('#search-content').addClass('fetching')},
-      complete: function() {
-        $('#search-content').removeClass('fetching')
-        jQuery('html,body').animate({ scrollTop: jQuery("#search-content").offset().top }, 400)
-      },
+      beforeSend: function(){$('#search-content, #facets').addClass('fetching')},
+      complete: function() {$('#search-content, #facets').removeClass('fetching')},
       dataType: 'script'
     })
     return false;
@@ -28,8 +25,8 @@
     $.ajax({
       url: this.action,
       data: $(this).serialize(),
-      beforeSend: function(){$('#search-content').addClass('fetching')},
-      complete: function() {$('#search-content').removeClass('fetching')},
+      beforeSend: function(){$('#search-content, #facets').addClass('fetching')},
+      complete: function() {$('#search-content, #facets').removeClass('fetching')},
       dataType: 'script'
     })
     return false;
@@ -38,7 +35,16 @@
   // Assets links
   $('#assets-menu a').click(function(e){
     e.preventDefault();
-    window.location.href = $(this).attr("href") + '?query=' + $('#search-input').val();
+    var parameters = {}
+    var tag = $(this).data('tag');
+    var category_path = $(this).data('category_path');
+    var query = $('#search-input').val();
+
+    if(tag) parameters.tag = tag;
+    if(category_path) parameters.category_path = category_path;
+    if(query) parameters.query = query;
+
+    window.location.href = $(this).attr("href") + '?' + $.param(parameters);
   });
 
   // Real time search

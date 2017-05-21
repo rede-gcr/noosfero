@@ -12,7 +12,7 @@ class Profile < ApplicationRecord
     :custom_url_redirection, :layout_template, :email_suggestions,
     :allow_members_to_invite, :invite_friends_only, :secret,
     :profile_admin_mail_notification, :allow_followers, :wall_access,
-    :profile_kinds
+    :profile_kinds, :tag_list, :boxes_attributes
 
   attr_accessor :old_region_id
 
@@ -202,6 +202,9 @@ class Profile < ApplicationRecord
   extend ActsAsHavingSettings::ClassMethods
   acts_as_having_settings field: :data
 
+  store_accessor :metadata
+  include MetadataScopes
+
   def settings
     data
   end
@@ -252,8 +255,8 @@ class Profile < ApplicationRecord
 
   # subclass specific
   scope :more_popular, -> { }
-  scope :more_active, -> { order 'activities_count DESC' }
-  scope :more_recent, -> { order "created_at DESC" }
+  scope :more_active, -> { order 'profiles.activities_count DESC' }
+  scope :more_recent, -> { order "profiles.created_at DESC" }
 
   scope :followed_by, -> person{
     distinct.select('profiles.*').
@@ -464,13 +467,11 @@ class Profile < ApplicationRecord
 
   def self.is_available?(identifier, environment, profile_id=nil)
     return false unless identifier =~ IDENTIFIER_FORMAT &&
-      !RESERVED_IDENTIFIERS.include?(identifier) &&
+      !Profile::RESERVED_IDENTIFIERS.include?(identifier) &&
       (NOOSFERO_CONF['exclude_profile_identifier_pattern'].blank? || identifier !~ /#{NOOSFERO_CONF['exclude_profile_identifier_pattern']}/)
     return true if environment.nil?
 
-    profiles = environment.profiles.where(:identifier => identifier)
-    profiles = profiles.where(['id != ?', profile_id]) if profile_id.present?
-    !profiles.exists?
+    environment.is_identifier_available?(identifier, profile_id)
   end
 
   def self.visible_for_person(person)
@@ -577,6 +578,8 @@ class Profile < ApplicationRecord
 
   xss_terminate :only => [ :name, :nickname, :address, :contact_phone, :description ], :on => 'validation'
   xss_terminate :only => [ :custom_footer, :custom_header ], :with => 'white_list'
+
+  include SanitizeTags
 
   include WhiteListFilter
   filter_iframes :custom_header, :custom_footer
@@ -753,10 +756,6 @@ private :generate_url, :url_options
       memo[tag.name] = tag.count
       memo
     end
-  end
-
-  def tagged_with(tag)
-    self.articles.tagged_with(tag)
   end
 
   # Tells whether a specified profile has members or nor.
@@ -1160,16 +1159,26 @@ private :generate_url, :url_options
     end
   end
 
-  def may_display_location_to? user = nil
-    LOCATION_FIELDS.each do |field|
-      return false if !self.may_display_field_to? field, user
-    end
-    return true
-  end
-
   # field => privacy (e.g.: "address" => "public")
   def fields_privacy
+    self.data[:fields_privacy] ||= {}
+    custom_field_privacy = {}
+    self.custom_field_values.includes(:custom_field).pluck("custom_fields.name", :public).to_h.map do |field, is_public|
+      custom_field_privacy[field] = 'public' if is_public
+    end
+    self.data[:fields_privacy].merge!(custom_field_privacy)
+
     self.data[:fields_privacy]
+  end
+
+  def custom_field_value(field_name)
+    value = nil
+    begin
+     value = self.send(field_name)
+    rescue NoMethodError
+      value = self.custom_field_values.by_field(field_name).pluck(:value).first
+    end
+    value
   end
 
   # abstract
@@ -1234,5 +1243,14 @@ private :generate_url, :url_options
 
   def in_circle?(circle, follower)
     ProfileFollower.with_follower(follower).with_circle(circle).with_profile(self).present?
+  end
+
+  def available_blocks(person)
+    blocks = [ ArticleBlock, TagsCloudBlock, InterestTagsBlock, RecentDocumentsBlock, ProfileInfoBlock, LinkListBlock, MyNetworkBlock, FeedReaderBlock, ProfileImageBlock, LocationBlock, SlideshowBlock, ProfileSearchBlock, HighlightsBlock, MenuBlock ]
+    # block exclusive to profiles that have blog
+    blocks << BlogArchivesBlock if self.has_blog?
+    # block exclusive for environment admin
+    blocks << RawHTMLBlock if person.present? && person.is_admin?(self.environment)
+    blocks + plugins.dispatch(:extra_blocks, type: self.class)
   end
 end

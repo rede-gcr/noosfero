@@ -1063,7 +1063,7 @@ class EnvironmentTest < ActiveSupport::TestCase
     person.articles.create!(:name => 'article 2', :tag_list => 'first-tag, second-tag')
     person.articles.create!(:name => 'article 3', :tag_list => 'first-tag, second-tag, third-tag')
 
-    assert_equal({ 'first-tag' => 3, 'second-tag' => 2, 'third-tag' => 1 }, Environment.default.tag_counts)
+    assert_equal({ 'first-tag' => 3, 'second-tag' => 2, 'third-tag' => 1 }, Environment.default.environment_tags)
   end
 
   should 'not list tags count from other environment' do
@@ -1071,7 +1071,18 @@ class EnvironmentTest < ActiveSupport::TestCase
     user = create_user('testinguser', :environment => e).person
     user.articles.build(:name => 'article 1', :tag_list => 'first-tag').save!
 
-    assert_equal({}, Environment.default.tag_counts)
+    assert_equal({}, Environment.default.environment_tags)
+  end
+
+  should 'list tags from profiles and articles' do
+    environment = Environment.default
+    person = create_user('person', :environment => environment).person
+    person.tag_list = 'second-tag, third-tag'
+    person.save!
+    person.articles.create!(:name => 'article 1', :tag_list => 'first-tag')
+    person.articles.create!(:name => 'article 2', :tag_list => 'first-tag, second-tag')
+
+    assert_equal({ 'first-tag' => 2, 'second-tag' => 2, 'third-tag' => 1 }, environment.environment_tags)
   end
 
   should 'have a list of local documentation links' do
@@ -1743,6 +1754,76 @@ class EnvironmentTest < ActiveSupport::TestCase
     assert_includes environment.kinds, k1
     assert_includes environment.kinds, k2
     assert_not_includes environment.kinds, k3
+  end
+
+  should 'return all custom person fields' do
+    env = Environment.default
+    Person.stubs(:fields).returns(['cell_phone'])
+
+    env.custom_person_fields = {'cell_phone' => {'required' => 'true', 'active' => 'true'}}
+
+    CustomField.create(:name => "person_field", :format=>"myFormat", :default_value => "value for person", :customized_type=>"Person", :active => true, :environment => env, :required=>true)
+
+    expected_hash = {'cell_phone' => {'required' => 'true', 'active' => 'true', 'signup' => 'true'}, 'person_field' => {'required' => 'true', 'active' => 'true', 'signup' => 'true'}}
+    assert_equal expected_hash, env.all_custom_person_fields
+  end
+
+  should 'return all custom community fields' do
+    env = Environment.default
+    Community.stubs(:fields).returns(['cell_phone'])
+
+    env.custom_community_fields = {'cell_phone' => {'required' => 'true', 'active' => 'true'}}
+
+    CustomField.create(:name => "community_field", :format=>"myFormat", :default_value => "value for person", :customized_type=>"Community", :active => true, :environment => env, :required=>true)
+
+    expected_hash = {'cell_phone' => {'required' => 'true', 'active' => 'true', 'signup' => 'true'}, 'community_field' => {'required' => 'true', 'active' => 'true', 'signup' => 'true'}}
+    assert_equal expected_hash, env.all_custom_community_fields
+  end
+
+  should 'return all custom enterprise fields' do
+    env = Environment.default
+    Enterprise.stubs(:fields).returns(['cell_phone'])
+
+    env.custom_enterprise_fields = {'cell_phone' => {'required' => 'true', 'active' => 'true'}}
+
+    CustomField.create(:name => "enterprise_field", :format=>"myFormat", :default_value => "value for person", :customized_type=>"Enterprise", :active => true, :environment => env, :required=>true)
+
+    expected_hash = {'cell_phone' => {'required' => 'true', 'active' => 'true', 'signup' => 'true'}, 'enterprise_field' => {'required' => 'true', 'active' => 'true', 'signup' => 'true'}}
+    assert_equal expected_hash, env.all_custom_enterprise_fields
+  end
+
+  should 'allow plugins to add new reserved_identifiers' do
+    environment = Environment.default
+    class Plugin1 < Noosfero::Plugin
+      def reserved_identifiers
+        ['identifier1', 'identifier2']
+      end
+    end
+    Noosfero::Plugin::Manager.any_instance.stubs(:enabled_plugins).returns([Plugin1.new])
+
+    assert_includes environment.reserved_identifiers, 'identifier1'
+    assert_includes environment.reserved_identifiers, 'identifier2'
+  end
+
+  should 'list available core\'s blocks' do
+    environment = Environment.default
+    person = create_user('mytestuser').person
+    assert_includes environment.available_blocks(person), ArticleBlock
+  end
+
+  should 'list available blocks' do
+    environment = Environment.default
+    person = create_user('mytestuser').person
+    class CustomBlock1 < Block; end;
+    class TestBlockPlugin < Noosfero::Plugin
+      def self.extra_blocks
+        {
+          CustomBlock1 => {:type => Environment},
+        }
+      end
+    end
+    Noosfero::Plugin::Manager.any_instance.stubs(:enabled_plugins).returns([TestBlockPlugin.new])
+    assert_includes environment.available_blocks(person), CustomBlock1
   end
 
 end

@@ -1,0 +1,3 @@
+module StoresAppPlugin
+
+end

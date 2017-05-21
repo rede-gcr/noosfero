@@ -2,25 +2,29 @@ require_relative '../test_helper'
 
 class EnvironmentDesignControllerTest < ActionController::TestCase
 
-  ALL_BLOCKS = [ArticleBlock, LoginBlock, RecentDocumentsBlock, EnterprisesBlock, CommunitiesBlock, LinkListBlock, FeedReaderBlock, SlideshowBlock, HighlightsBlock, CategoriesBlock, RawHTMLBlock, TagsBlock ]
+  ALL_BLOCKS = [ArticleBlock, LoginBlock, RecentDocumentsBlock, EnterprisesBlock, CommunitiesBlock, LinkListBlock, FeedReaderBlock, SlideshowBlock, HighlightsBlock, CategoriesBlock, RawHTMLBlock, TagsCloudBlock ]
 
   def setup
     @controller = EnvironmentDesignController.new
+    @controller.stubs(:boxes_holder).returns(Environment.default)
 
     Noosfero::Plugin::Manager.any_instance.stubs(:enabled_plugins).returns([])
   end
 
   should 'indicate only actual blocks as such' do
+    @controller.stubs(:user).returns(create_user.person)
     assert(@controller.available_blocks.all? {|item| item.new.is_a? Block})
   end
 
   ALL_BLOCKS.map do |block|
     define_method "test_should_#{block.to_s}_is_available" do
+      @controller.stubs(:user).returns(create_user.person)
       assert_includes @controller.available_blocks,block
     end
   end
 
   should 'all available block in test' do
+    @controller.stubs(:user).returns(create_user.person)
     assert_equal ALL_BLOCKS, @controller.available_blocks
   end
 
@@ -130,9 +134,9 @@ class EnvironmentDesignControllerTest < ActionController::TestCase
     assert_tag :tag => 'input', :attributes => { :id => 'block_address' }
   end
 
-  should 'be able to edit TagsBlock' do
+  should 'be able to edit TagsCloudBlock' do
     login_as(create_admin_user(Environment.default))
-    b = TagsBlock.create!
+    b = TagsCloudBlock.create!
     e = Environment.default
     e.boxes.create!
     e.boxes.first.blocks << b
@@ -160,12 +164,14 @@ class EnvironmentDesignControllerTest < ActionController::TestCase
         }
       end
     end
-
+    @controller.stubs(:user).returns(create_user.person)
     Noosfero::Plugin::Manager.any_instance.stubs(:enabled_plugins).returns([TestBlockPlugin.new])
     assert @controller.available_blocks.include?(CustomBlock1)
   end
 
   should 'a person, enterprise and community blocks plugins do not add new blocks for environments' do
+    @controller.stubs(:user).returns(create_user.person)
+
     class CustomBlock1 < Block; end;
     class CustomBlock2 < Block; end;
     class CustomBlock3 < Block; end;
@@ -260,8 +266,8 @@ class EnvironmentDesignControllerTest < ActionController::TestCase
 
   should 'clone a block' do
     login_as(create_admin_user(Environment.default))
-    block = TagsBlock.create!
-    assert_difference 'TagsBlock.count', 1 do
+    block = TagsCloudBlock.create!
+    assert_difference 'TagsCloudBlock.count', 1 do
       post :clone_block, :id => block.id
       assert_response :redirect
     end

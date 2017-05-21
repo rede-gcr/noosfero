@@ -1,0 +1,1 @@
+get 'stores' => 'application#index'

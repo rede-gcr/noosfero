@@ -288,7 +288,7 @@ module ApplicationHelper
   end
 
   def env_theme_include(template, options = {})
-    from_theme_include(environment.theme, template, options)
+    from_theme_include(session[:theme] || environment.theme, template, options)
   end
 
   def from_theme_include(theme, template, options = {})
@@ -496,7 +496,7 @@ module ApplicationHelper
       content_tag('div', label_html + control_html, :class => 'formfieldline' )
     end
 
-    (field_helpers - %w(hidden_field)).each do |selector|
+    (field_helpers - %i(hidden_field)).each do |selector|
       src = <<-END_SRC
         def #{selector}(field, *args, &proc)
           begin
@@ -907,18 +907,34 @@ module ApplicationHelper
     if count > 0
       pending_tasks_count = link_to(count.to_s, user.tasks_url, :id => 'pending-tasks-count', :title => _("Manage your pending tasks"))
     end
+
     user_identifier = "<i style='background-image:url(#{user.profile_custom_icon(gravatar_default)})'></i><strong>#{user.identifier}</strong>"
+
     welcome_link = link_to(user_identifier.html_safe, user.public_profile_url, :id => "homepage-link", :title => _('Go to your homepage'))
     welcome_span = _("<span class='welcome'>Welcome,</span> %s") % welcome_link.html_safe
+
     ctrl_panel_icon = '<i class="icon-menu-ctrl-panel"></i>'
     ctrl_panel_section = '<strong>' + ctrl_panel_icon + _('Control panel') + '</strong>'
     ctrl_panel_link = link_to(ctrl_panel_section.html_safe, user.admin_url, :class => 'ctrl-panel', :title => _("Configure your personal account and content"))
+
     logout_icon = '<i class="icon-menu-logout"></i><strong>' + _('Logout') + '</strong>'
     logout_link = link_to(logout_icon.html_safe, { :controller => 'account', :action => 'logout'} , :id => "logout", :title => _("Leave the system"))
+
+    plugins_items = @plugins.dispatch(:user_menu_items, user).collect { |content| instance_eval(&content) }
+
+    items = [
+      welcome_span.html_safe,
+      *plugins_items,
+      render_environment_features(:usermenu).html_safe,
+      admin_link.html_safe,
+      manage_enterprises,
+      manage_communities,
+      ctrl_panel_link.html_safe,
+      pending_tasks_count.html_safe,
+      logout_link.html_safe
+    ]
     join_result = safe_join(
-      [welcome_span.html_safe, render_environment_features(:usermenu).html_safe, admin_link.html_safe,
-        manage_enterprises, manage_communities, ctrl_panel_link.html_safe,
-        pending_tasks_count.html_safe, logout_link.html_safe], "")
+      items, "")
     join_result
   end
 
@@ -968,7 +984,7 @@ module ApplicationHelper
     elsif page.reference_article
       source_url = link_to(page.reference_article.profile.name, page.reference_article.url)
     end
-    content_tag(:div, (_('Source: %s') % source_url).html_safe, :id => 'article-source') unless source_url.nil?
+    content_tag(:div, _('Source: %s').html_safe % source_url.html_safe, :id => 'article-source') unless source_url.nil?
   end
 
   def task_information(task, params = {})

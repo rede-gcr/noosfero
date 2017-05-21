@@ -1,8 +1,8 @@
 class Block < ApplicationRecord
 
   attr_accessible :title, :subtitle, :display, :limit, :box_id, :posts_per_page,
-                  :visualization_format, :language, :display_user,
-                  :box, :edit_modes, :move_modes, :mirror, :visualization, :images_builder
+                  :visualization_format, :language, :display_user, :position,
+                  :box, :edit_modes, :move_modes, :mirror, :visualization, :images_builder, :api_content
 
   include ActionView::Helpers::TagHelper
 
@@ -22,6 +22,9 @@ class Block < ApplicationRecord
   acts_as_having_settings
 
   settings_items :visualization, :type => Hash, :default => {}
+
+  store_accessor :metadata
+  include MetadataScopes
 
   scope :enabled, -> { where :enabled => true }
 
@@ -307,6 +310,9 @@ class Block < ApplicationRecord
 
   def api_content(options = {})
     nil
+  end
+
+  def api_content=(values = {})
   end
 
   def display_api_content_by_default?

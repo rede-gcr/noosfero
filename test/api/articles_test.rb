@@ -228,14 +228,14 @@ class ArticlesTest < ActiveSupport::TestCase
     post "/api/v1/articles/#{article.id}/vote?#{params.to_query}"
     json = JSON.parse(last_response.body)
     ## The api should not allow to save this vote
-    assert_equal 400, last_response.status
+    assert_equal Api::Status::UNPROCESSABLE_ENTITY, last_response.status
   end
 
   should 'not perform a vote in a archived article' do
     article = fast_create(Article, :profile_id => @person.id, :name => "Some thing", :archived => true)
     @params[:value] = 1
     post "/api/v1/articles/#{article.id}/vote?#{params.to_query}"
-    assert_equal 400, last_response.status
+    assert_equal Api::Status::UNPROCESSABLE_ENTITY, last_response.status
   end
 
   should 'not update hit attribute of a specific child if a article is archived' do
@@ -841,6 +841,34 @@ class ArticlesTest < ActiveSupport::TestCase
     json = JSON.parse(last_response.body)
     assert_not_includes json.first.keys, 'id'
     assert_not_includes json.first.keys, 'title'
+  end
+
+  should 'search for articles' do
+    article1 = fast_create(Article, profile_id: user.person.id, name: "Some thing")
+    article2 = fast_create(Article, profile_id: user.person.id, name: "Other thing")
+    params[:search] = 'some'
+    get "/api/v1/articles/?#{params.to_query}"
+    json = JSON.parse(last_response.body)
+    assert_equal [article1.id], json.map { |a| a["id"] }
+  end
+
+  should 'search for articles of different types' do
+    article1 = fast_create(Event, profile_id: user.person.id, name: "Some thing")
+    article2 = fast_create(TextArticle, profile_id: user.person.id, name: "Some other thing")
+    article3 = fast_create(Article, profile_id: user.person.id, name: "Other thing")
+    params[:search] = 'some'
+    get "/api/v1/articles/?#{params.to_query}"
+    json = JSON.parse(last_response.body)
+    assert_equivalent [article1.id, article2.id], json.map { |a| a["id"] }
+  end
+
+  should "match error messages" do
+    profile = fast_create(Community, :environment_id => environment.id)
+    give_permission(user.person, 'post_content', profile)
+    params[:article] = {:name => ""}
+    post "/api/v1/communities/#{profile.id}/articles?#{params.to_query}"
+    json = JSON.parse(last_response.body)
+    assert_equal ({"name" => [{"error"=>"blank", "full_message"=>"Title can't be blank"}]}), json["errors"]
   end
 
 end

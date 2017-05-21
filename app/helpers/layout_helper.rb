@@ -3,14 +3,13 @@ module LayoutHelper
   protected
 
   def body_classes
-    # Identify the current controller and action for the CSS:
     [
-      (logged_in? ? 'logged-in' : nil),
+      (logged_in? ? " logged-in" : nil),
       "#{" responsive" if theme_option :responsive}",
       "controller-#{controller.controller_name}",
       "action-#{controller.controller_name}-#{controller.action_name}",
-      "template-#{@layout_template || if profile.blank? then 'default' else profile.layout_template end}",
-      !profile.nil? && profile.is_on_homepage?(request.path,@page) ? 'profile-homepage' : nil,
+      "template-#{@layout_template || layout_template}",
+      (!profile.nil? && profile.is_on_homepage?(request.path,@page) ? "profile-homepage" : nil),
       profile.present? ? profile.kinds_style_classes : nil,
     ].compact.join(' ')
   end
@@ -54,7 +53,7 @@ module LayoutHelper
     plugins_stylesheets = @plugins.select(&:stylesheet?).map { |plugin|
       plugin.class.public_path('style.css', true)
     }
-    global_css_pub = "/designs/themes/#{environment.theme}/global.css"
+    global_css_pub = "/designs/themes/#{session[:theme] || environment.theme}/global.css"
     global_css_at_fs = Rails.root.join 'public' + global_css_pub
 
     output = []

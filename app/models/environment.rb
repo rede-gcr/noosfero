@@ -15,7 +15,7 @@ class Environment < ApplicationRecord
                   :members_whitelist, :highlighted_news_amount,
                   :portal_news_amount, :date_format, :signup_intro,
                   :enable_feed_proxy, :http_feed_proxy, :https_feed_proxy,
-                  :disable_feed_ssl, :layout_template
+                  :disable_feed_ssl, :layout_template, :boxes_attributes
 
   has_many :users
 
@@ -26,10 +26,13 @@ class Environment < ApplicationRecord
 
   has_many :tasks, :dependent => :destroy, :as => 'target'
   has_many :search_terms, :as => :context
-  has_many :custom_fields, :dependent => :destroy
   has_many :email_templates, :foreign_key => :owner_id
+  has_many :custom_fields, :dependent => :destroy
+  has_many :person_custom_fields, -> { where(customized_type: 'Person')}, class_name: 'CustomField'
+  has_many :community_custom_fields, -> { where(customized_type: 'Community')}, class_name: 'CustomField'
+  has_many :enterprise_custom_fields, -> { where(customized_type: 'Enterprise')}, class_name: 'CustomField'
 
-  IDENTIFY_SCRIPTS = /(php[0-9s]?|[sp]htm[l]?|pl|py|cgi|rb)/
+  IDENTIFY_SCRIPTS = /(php[0-9s]?|[sp]htm[l]?|pl|py|cgi|rb)/ unless const_defined?(:IDENTIFY_SCRIPTS)
 
   validates_inclusion_of :date_format,
                          :in => [ 'numbers_with_year', 'numbers',
@@ -506,6 +509,15 @@ class Environment < ApplicationRecord
     self.settings[:organization_approval_method] = actual_value
   end
 
+  def all_custom_person_fields
+    fields = self.settings[:custom_person_fields].nil? ? {} : self.settings[:custom_person_fields]
+    self.person_custom_fields.map do |cf|
+      fields[cf.name] = {'active' => cf.active.to_s, 'required' => cf.required.to_s, 'signup' => cf.signup.to_s }
+    end
+
+    fields
+  end
+
   def custom_person_fields
     self.settings[:custom_person_fields].nil? ? {} : self.settings[:custom_person_fields]
   end
@@ -566,6 +578,15 @@ class Environment < ApplicationRecord
     end
   end
 
+  def all_custom_enterprise_fields
+    fields = self.settings[:custom_enterprise_fields].nil? ? {} : self.settings[:custom_enterprise_fields]
+    self.enterprise_custom_fields.map do |cf|
+      fields[cf.name] = {'active' => cf.active.to_s, 'required' => cf.required.to_s, 'signup' => cf.signup.to_s }
+    end
+
+    fields
+  end
+
   def custom_enterprise_fields
     self.settings[:custom_enterprise_fields].nil? ? {} : self.settings[:custom_enterprise_fields]
   end
@@ -610,9 +631,19 @@ class Environment < ApplicationRecord
     signup_fields
   end
 
+  def all_custom_community_fields
+    fields = self.settings[:custom_community_fields].nil? ? {} : self.settings[:custom_community_fields]
+    self.community_custom_fields.map do |cf|
+      fields[cf.name] = {'active' => cf.active.to_s, 'required' => cf.required.to_s, 'signup' => cf.signup.to_s }
+    end
+
+    fields
+  end
+
   def custom_community_fields
     self.settings[:custom_community_fields].nil? ? {} : self.settings[:custom_community_fields]
   end
+
   def custom_community_fields=(values)
     self.settings[:custom_community_fields] = values.delete_if { |key, value| ! Community.fields.include?(key) }
     self.settings[:custom_community_fields].each_pair do |key, value|
@@ -761,11 +792,25 @@ class Environment < ApplicationRecord
 
   has_many :events, :through => :profiles, :source => :articles, :class_name => 'Event'
 
-  has_many :tags, :through => :articles
+  has_many :article_tags, :through => :articles, :source => :tags
+  has_many :profile_tags, :through => :profiles, :source => :tags
 
-  def tag_counts
-    articles.tag_counts.inject({}) do |memo,tag|
+  include ScopeTool
+  scope :tags, -> environment {ScopeTool.union(environment.article_tags, environment.profile_tags)}
+
+  def tags
+    self.class.tags(self)
+  end
+
+
+  def environment_tags
+    results = articles.tag_counts.inject({}) do |memo,tag|
       memo[tag.name] = tag.count
+      memo
+    end
+
+    profiles.tag_counts.inject(results) do |memo,tag|
+      memo[tag.name].present? ? memo[tag.name] += tag.count : memo[tag.name] = tag.count
       memo
     end
   end
@@ -1037,6 +1082,30 @@ class Environment < ApplicationRecord
 
   def permissions_for(person)
     person.role_assignments.where(resource: self).map {|ra| ra.role.permissions}.flatten.uniq
+  end
+
+  def available_blocks(person)
+    core_blocks = [ ArticleBlock, LoginBlock, RecentDocumentsBlock, EnterprisesBlock,
+      CommunitiesBlock, LinkListBlock, FeedReaderBlock, SlideshowBlock,
+      HighlightsBlock, CategoriesBlock, RawHTMLBlock, TagsCloudBlock ]
+    core_blocks + plugins.dispatch(:extra_blocks, type: self.class)
+  end
+
+  include Noosfero::Plugin::HotSpot
+  def environment
+    self
+  end
+
+  def reserved_identifiers
+    plugins.dispatch(:reserved_identifiers).inject([]) do |result, identifier|
+      result << identifier.to_s
+    end
+  end
+
+  def is_identifier_available?(identifier, profile_id = nil)
+    profiles = environment.profiles.where(:identifier => identifier)
+    profiles = profiles.where(['id != ?', profile_id]) if profile_id.present?
+    !reserved_identifiers.include?(identifier) && !profiles.exists?
   end
 
   private

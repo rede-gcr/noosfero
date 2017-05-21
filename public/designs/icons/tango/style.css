@@ -39,6 +39,7 @@
 .icon-up-red    { background-image: url(mod/16x16/actions/go-up-red.png) }
 .icon-forward   { background-image: url(Tango/16x16/actions/go-next.png) }
 .icon-search    { background-image: url(Tango/16x16/actions/search.png) }
+.icon-clear     { background-image: url(Tango/16x16/actions/edit-clear.png) }
 .icon-ok        { background-image: url(Tango/16x16/actions/media-playback-start.png) }
 .icon-login     { background-image: url(mod/16x16/actions/log-in.png) }
 .icon-help      { background-image: url(Tango/16x16/apps/gnome-help.png) }
@@ -59,6 +60,7 @@
 /*.icon-menu-edit     { background-image: url(edit-HC.gif) } UNUSED */
 .icon-menu-ctrl-panel { background-image: url(Tango/16x16/categories/preferences-desktop.png) }
 .icon-menu-admin      { background-image: url(Tango/16x16/categories/preferences-system.png) }
+.icon-menu-stats      { background-image: url(Tango/16x16/mimetypes/x-office-presentation.png) }
 .icon-menu-my-groups  { background-image: url(Tango/16x16/apps/system-config-users.png) }
 .icon-menu-login      { background-image: url(mod/16x16/actions/log-in.png) }
 .icon-menu-logout     { background-image: url(mod/16x16/actions/log-out.png) }

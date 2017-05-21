@@ -4,12 +4,7 @@ class CmsController < MyProfileController
 
   include ArticleHelper
   include CategoriesHelper
-
-  def search_tags
-    arg = params[:term].downcase
-    result = Tag.where('name ILIKE ?', "%#{arg}%").limit(10)
-    render :text => prepare_to_token_input_by_label(result).to_json, :content_type => 'application/json'
-  end
+  include SearchTags
 
   def self.protect_if(*args)
     before_filter(*args) do |c|
@@ -198,9 +193,7 @@ class CmsController < MyProfileController
     @uploaded_files = []
     @article = @parent = check_parent(params[:parent_id])
     @target = @parent ? ('/%s/%s' % [profile.identifier, @parent.full_name]) : '/%s' % profile.identifier
-    if @article
-      record_coming
-    end
+    record_coming
     if request.post? && params[:uploaded_files]
       params[:uploaded_files].each do |file|
         unless file == ''
@@ -258,8 +251,10 @@ class CmsController < MyProfileController
   end
 
   def search_communities_to_publish
-    scope = user.memberships.distinct(false).group("profiles.id")
-    render :text => find_by_contents(:profiles, environment, scope, params['q'], {:page => 1}, {:fields => ['name']})[:results].map {|community| {:id => community.id, :name => community.name} }.to_json
+    scope = user.memberships.distinct(false)
+    results = find_by_contents(:profiles, environment, scope, params['q'], {:page => 1}, {:fields => ['name']})[:results]
+    render :text => results.map {|community| {:id => community.id, :name => community.name} }
+                           .uniq {|c| c[:id] }.to_json
   end
 
   def publish

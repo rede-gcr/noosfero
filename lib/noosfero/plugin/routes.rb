@@ -6,8 +6,8 @@ prefixes_by_folder = {
   admin:     'admin/plugin',
 }
 
-Dir.glob(Rails.root.join(plugins_root, '*', 'controllers')) do |controllers_dir|
-  plugin_name = File.basename(File.dirname(controllers_dir))
+Dir.glob Rails.root.join plugins_root, '*', 'controllers' do |controllers_dir|
+  plugin_name = File.basename File.dirname controllers_dir
 
   controllers_by_folder = prefixes_by_folder.keys.inject({}) do |hash, folder|
     path = "#{controllers_dir}/#{folder}/"
@@ -39,21 +39,21 @@ Dir.glob(Rails.root.join(plugins_root, '*', 'controllers')) do |controllers_dir|
 
   # DEPRECATED default controllers
   paths.reverse_merge!(
-    "plugin/#{plugin_name}(/:action(/:id))": {
+    "plugin/#{plugin_name}(/:action(/:id))" => {
       controller: "#{plugin_name}_plugin",
       via:        :all,
     },
-    "admin/plugin/#{plugin_name}(/:action(/:id))": {
+    "admin/plugin/#{plugin_name}(/:action(/:id))" => {
       controller: "#{plugin_name}_plugin_admin",
       via:        :all,
     },
 
-    "profile(/:profile)/plugin/#{plugin_name}(/:action(/:id))": {
+    "profile(/:profile)/plugin/#{plugin_name}(/:action(/:id))" => {
       controller: "#{plugin_name}_plugin_profile",
       via:        :all,
       profile:    profile_format,
     },
-    "myprofile(/:profile)/plugin/#{plugin_name}(/:action(/:id))": {
+    "myprofile(/:profile)/plugin/#{plugin_name}(/:action(/:id))" => {
       controller: "#{plugin_name}_plugin_myprofile",
       via:        :all,
       profile:    profile_format,
@@ -64,7 +64,11 @@ Dir.glob(Rails.root.join(plugins_root, '*', 'controllers')) do |controllers_dir|
     controller_klass = "#{opts[:controller]}_controller".camelize.constantize rescue nil
     next unless controller_klass
 
-    match url.to_s, opts
+    match url, opts
   end
+end
+
+Dir.glob Rails.root.join plugins_root, '*', 'config', 'routes.rb' do |route|
+  eval IO.read(route), binding, route
 end
 

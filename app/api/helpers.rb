@@ -134,7 +134,7 @@ module Api
       article.profile = asset
 
       if !article.save
-        render_api_errors!(article.errors.full_messages)
+        render_model_errors!(article.errors)
       end
       present_partial article, :with => Entities::Article
     end
@@ -181,7 +181,7 @@ module Api
       task.target_type = 'Profile'
 
       if !task.save
-        render_api_errors!(task.errors.full_messages)
+        render_model_errors!(task.errors)
       end
       present_partial task, :with => Entities::Task
     end
@@ -215,17 +215,20 @@ module Api
     ###########################
     #        Activities       #
     ###########################
-    def find_activities(asset, method_or_relation = 'activities')
+    def find_activities(asset, method_or_relation = 'tracked_notifications')
 
       not_found! if asset.blank? || asset.secret || !asset.visible
       forbidden! if !asset.display_private_info_to?(current_person)
-
-      activities = select_filtered_collection_of(asset, method_or_relation, params)
-      activities = activities.map(&:activity)
+      if method_or_relation == 'activities'
+        activities = select_filtered_collection_of(asset, method_or_relation, params)
+        activities = activities.map(&:activity)
+      else
+        activities = select_filtered_collection_of(asset, method_or_relation, params)
+      end
       activities
     end
 
-    def present_activities_for_asset(asset, method_or_relation = 'activities')
+    def present_activities_for_asset(asset, method_or_relation = 'tracked_notifications')
       tasks = find_activities(asset, method_or_relation)
       present_activities(tasks)
     end
@@ -318,6 +321,11 @@ module Api
 
       objects = objects.where(conditions).where(timestamp).reorder(order)
 
+      if params[:search].present?
+        asset = objects.model.name.underscore.pluralize
+        objects = find_by_contents(asset, object, objects, params[:search])[:results]
+      end
+
       params[:page] ||= 1
       params[:per_page] ||= limit
       paginate(objects)
@@ -355,7 +363,7 @@ module Api
     end
 
     ##########################################
-    #              error helpers             #
+    #           response helpers             #
     ##########################################
 
     def not_found!
@@ -389,20 +397,23 @@ module Api
       render_api_error!(_('Method Not Allowed'), Api::Status::METHOD_NOT_ALLOWED)
     end
 
-    # javascript_console_message is supposed to be executed as console.log()
-    def render_api_error!(user_message, status, log_message = nil, javascript_console_message = nil)
-      message_hash = {'message' => user_message, :code => status}
-      message_hash[:javascript_console_message] = javascript_console_message if javascript_console_message.present?
-      log_msg = "#{status}, User message: #{user_message}"
-      log_msg = "#{log_message}, #{log_msg}" if log_message.present?
-      log_msg = "#{log_msg}, Javascript Console Message: #{javascript_console_message}" if javascript_console_message.present?
-      logger.error log_msg unless Rails.env.test?
+    def render_api_error!(user_message, status = Api::Status::BAD_REQUEST)
+      message_hash = {'message' => user_message}
+      log_message = "#{status}, User message: #{user_message}"
+      logger.error log_message unless Rails.env.test?
       error!(message_hash, status)
     end
 
-    def render_api_errors!(messages)
-      messages = messages.to_a if messages.class == ActiveModel::Errors
-      render_api_error!(messages.join(','), Api::Status::BAD_REQUEST)
+    def render_model_errors!(active_record_errors)
+      message_hash = {}
+      if active_record_errors.details
+        message_hash[:errors] = active_record_errors.details
+        message_hash[:errors].each do |field, errors|
+          full_messages = active_record_errors.full_messages_for(field)
+          errors.each_with_index {|error, i| error[:full_message] = full_messages[i] }
+        end
+      end
+      error!(message_hash, Api::Status::UNPROCESSABLE_ENTITY)
     end
 
     protected
@@ -523,6 +534,12 @@ module Api
       begin_period = from_date.nil? ? Time.at(0).to_datetime : from_date
       end_period = until_date.nil? ? DateTime.now : until_date
       begin_period..end_period
+    end
+
+    def settings(owner)
+      blocks = owner.available_blocks(current_person)
+      settings = {:available_blocks => blocks}
+      settings
     end
   end
 end
