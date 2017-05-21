@@ -25,9 +25,10 @@ end
 
 group :development do
   gem 'pry'
+  gem 'pry-rails'
   #gem 'byebug', platform: :mri
 
-  gem 'better_errors'
+  #gem 'better_errors'
   gem 'binding_of_caller'
 
   gem 'wirble'
