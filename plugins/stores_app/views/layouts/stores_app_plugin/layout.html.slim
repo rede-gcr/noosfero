@@ -10,7 +10,5 @@ html
     app
 
     = render 'layouts/stores_app_plugin/tags'
-    javascript:
-      window.profile = {name: #{profile.name.to_json}}
-      store.load()
+    = yield
 

@@ -59,14 +59,3 @@ class SuppliersPlugin::Base < Noosfero::Plugin
 
 end
 
-ActiveSupport.on_load :solr_product do
-  ::ProductsPlugin::Product.class_eval do
-
-    def solr_supplied
-      self.supplied?
-    end
-
-    self.solr_extra_fields << :solr_supplied
-  end
-end
-

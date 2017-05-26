@@ -1,1 +1,6 @@
 
+javascript:
+  window.profile = {name: #{profile.name.to_json}}
+  store.catalog  = #{StoresAppPlugin::CatalogSerializer.new(profile).to_json.html_safe}
+  store.load()
+
