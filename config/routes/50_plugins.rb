@@ -1,6 +1,7 @@
 paths              = {}
 profile_format     = /#{Noosfero.identifier_format}/i
 plugins_root       = if Rails.env.test? then 'plugins' else '{baseplugins,config/plugins}' end
+controllers_paths  = "#{Rails.root}/#{plugins_root}/*/{app/,}controllers"
 prefixes_by_folder = {
   public:    'plugin',
   profile:   'profile(/:profile)/plugin',
@@ -8,7 +9,7 @@ prefixes_by_folder = {
   admin:     'admin/plugin',
 }
 
-Dir.glob Rails.root.join plugins_root, '*', 'controllers' do |controllers_dir|
+Dir[controllers_paths].each do |controllers_dir|
   plugin_name = File.basename File.dirname controllers_dir
 
   controllers_by_folder = prefixes_by_folder.keys.inject({}) do |hash, folder|
@@ -18,7 +19,6 @@ Dir.glob Rails.root.join plugins_root, '*', 'controllers' do |controllers_dir|
     end
     hash
   end
-
 
   controllers_by_folder.each do |folder, controllers|
     controllers.each do |controller|
