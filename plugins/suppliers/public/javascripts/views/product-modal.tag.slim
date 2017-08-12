@@ -60,7 +60,7 @@ product-modal.modal.fade tabindex="-1" role="dialog"
               .form-group
                 label for="p-supplier-price"
                   |{t("views.product.the_supplier_price")}
-                input type="text" value="{product.supplier_price}" id='p-supplier-price' oninput="{updatePrice}"
+                input type="number" value="{product.supplier_price}" id='p-supplier-price' oninput="{updatePrice}"
 
               .form-group
                 p.final_price
@@ -229,9 +229,7 @@ product-modal.modal.fade tabindex="-1" role="dialog"
         // to validate category need to see the id instead of the input
         if (keys[i] == 'product_category_id' && !this.product.product_category_id)
           input.value = ""
-        console.log(input.value)
-        console.log(this.product.product_category_id)
-        if (input.value == "" || input.value == "0") {
+        if (input.value.trim() == "" || input.value == "0") {
           alert(this.t('views.product.validation_error_'+keys[i]))
           $("product-modal").scrollTo(100,1000)
           return false
