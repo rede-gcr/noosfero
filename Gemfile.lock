@@ -1,5 +1,5 @@
 GIT
-  remote: git://github.com/coletivoEITA/acts_as_solr_reloaded.git
+  remote: https://github.com/coletivoEITA/acts_as_solr_reloaded.git
   revision: a04ff0c8b48e6c128166bc9e95b9ab1b865f45e8
   ref: a04ff0c
   specs:
@@ -484,7 +484,7 @@ GEM
       execjs (~> 2)
       rails (>= 3.0, < 6.0)
     rmagick (2.16.0)
-    rollbar (2.14.1)
+    rollbar (2.15.0)
       multi_json
     rspec (3.6.0)
       rspec-core (~> 3.6.0)
@@ -713,4 +713,4 @@ DEPENDENCIES
   xss_terminate (= 0.0.0)!
 
 BUNDLED WITH
-   1.13.6
+   1.15.1
