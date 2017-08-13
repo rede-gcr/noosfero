@@ -26,10 +26,23 @@ consumer-page
             .pending-consumers.consumers-listing.row
               pending-consumer-box each='{consumer in pendingConsumers}' consumer='{consumer}'
 
-  .row
-    .search.col-xs-12
-      input name='search' placeholder="{cs.t('views.consumer.index.search')}" onkeyup='{search}'
-      .search-icon
+  .filter
+    input type='hidden' value="{page}"
+
+    h4
+      |{cs.t("views.consumer.index.filter")}
+    form.form-inline onsubmit="return false"
+      .form-group
+        .name
+          input name='search' placeholder="{cs.t('views.consumer.index.search')}" onkeyup='{search}'
+
+      .form-group.hub_id
+        select name="hub_id" onchange="{search}"
+          option value=""
+            |{cs.t("views.consumer.index.select_hub")}
+          option each="{hub in hubs}" value="{hub.id}" selected="{hub.id == filter_hub_id}"
+            |{hub.name}
+
 
   .consumers-listing.row
     consumer-box each='{consumer in consumers}' consumer='{consumer}'
@@ -45,16 +58,23 @@ consumer-page
     this.tasks = opts.tasks;
     this.editView = this.tags['consumer-view']
     this.tasks_count = opts.tasks_count
+    this.filter_hub_id = opts.filter_hub_id
 
     var self = this;
 
     search(e) {
       var needle = removeDiacritics($('input[name="search"]').val().toLowerCase())
       for (var i in this.consumers) {
-        var c      = this.consumers[i]
-        var field1 = removeDiacritics(c.name.toLowerCase())
-        var field2 = c.email || ''
-        this.consumers[i].selected = field1.indexOf(needle) > -1 || field2.indexOf(needle) > -1
+        if (needle) {
+          var field1 = removeDiacritics(this.consumers[i].name.toLowerCase())
+          var field2 = this.consumers[i].email || ''
+          this.consumers[i].selected = field1.indexOf(needle) > -1 || field2.indexOf(needle) > -1
+        } else this.consumers[i].selected = true;
+        // filter hub
+        hub_id = $(".filter select[name=hub_id").val()
+        if (hub_id && this.consumers[i].selected && this.consumers[i].hub_id != hub_id) {
+          this.consumers[i].selected = false
+        }
       }
     }
 

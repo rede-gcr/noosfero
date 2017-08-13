@@ -3,8 +3,8 @@
 
   #content {
     .box-container-1 {
-      background-color: #EFEFEF;
-      .main-block { background-color: #EFEFEF; }
+      background-color: white;
+      .main-block { background-color: white; }
     }
 
     .main-block .consumers-page {
@@ -22,47 +22,61 @@
         background-size: 27px auto;
       }
 
-      .search {
-        margin-top: 30px;
+      .filter {
+        width: 100%;
+        padding: 10px;
+        margin: 20px auto;
+        display: inline-block;
+        background-color: #f8f8f8;
+        border: 1px solid #efefef;
+
+        h4 {
+          font-size: 13px;
+          font-weight: bold;
+          float: left;
+          margin-right: 20px;
+        }
 
         ::-webkit-input-placeholder { /* WebKit, Blink, Edge */
-          color:    $cirandas-header-bg;
+          color:    #bababa;
           font-weight: bold;
         }
         :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
-          color:    $cirandas-header-bg;
+          color:    #bababa;
           font-weight: bold;
           opacity:  1;
         }
         ::-moz-placeholder { /* Mozilla Firefox 19+ */
-          color:    $cirandas-header-bg;
+          color:    #bababa;
           font-weight: bold;
           opacity:  1;
         }
         :-ms-input-placeholder { /* Internet Explorer 10-11 */
-          color:    $cirandas-header-bg;
+          color:    #bababa;
           font-weight: bold;
+        }
+
+        select {
+          background-color: #f8f8f8;
+          margin-left: 15px;
+          max-width: 300px;
+        }
+
+        .form-group {
+          width: 30%;
         }
         input {
           border: none;
-          border-bottom: 2px solid $cirandas-header-bg;
           background-color: transparent;
-          color: $cirandas-header-bg;
           outline: none;
-          margin-bottom: 10px;
           font-size: 16px;
           width: 100%;
-          margin-bottom: 15px;
         }
-        .search-icon {
-          width: 25px;
-          height: 25px;
-          background-image: url(/plugins/consumers_coop/images/pesquisa.png);
-          background-repeat: no-repeat;
-          background-size: 24px auto;
-          position: absolute;
-          top: -2px;
-          right: 16px;
+        input, select {
+          @include input;
+        }
+        input,select {
+          background-color: white;
         }
       }
       .picture-block {
@@ -105,7 +119,7 @@
 
         border: 2px solid $cirandas-header-bg;
         background-color: transparent;
-        color: #777; 
+        color: #777;
         font-size: 14px;
         font-weight: bold;
         text-transform: uppercase;
@@ -127,12 +141,12 @@
 
       .consumer-box {
         &.inactive {
-          background-color: #e0e0e0;
+          background-color: #FAFAFA;
           .name-block {
             .state { color: red; }
           }
         }
-        background-color: white;
+        background-color: #F0F0F0;
         &:hover {
           background-color: #DBE2E1;
         }
