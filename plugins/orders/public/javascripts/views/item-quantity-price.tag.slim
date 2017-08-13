@@ -79,7 +79,7 @@ order-item-quantity-price
         }
         var orderTag = this.parent.parent
         orderTag.updateOrder(order)
-        if (order.errors.length > 0)
+        if (order.errors && order.errors.length > 0)
           display_notice(this.t('views.item._edit.error'))
         else
           display_notice(this.t('views.item._edit.saved'))
