@@ -202,7 +202,7 @@ pt-BR: &pt-BR
         close: "Fechar"
         stock_modal: "Movimentação de Estoque"
         action: "Ação"
-        quantity: "Quantidade" 
+        quantity: "Quantidade"
         description: "Descrição"
         the_description: "Descreva a movimentação. Ex: Saída de 2 caixas para distribuição"
         adition: "adição"
@@ -470,8 +470,8 @@ pt-BR: &pt-BR
           confirm_remove: "Você tem certeza de que quer remover '%{consumer}' do grupo?"
           disable: Desabilitar consumidor
           enable: Habilitar consumidor
-          confirm_disable: "Você tem certeza de que quer desabilitar '%{consumer}' de fazer pedidos no grupo?" 
-          confirm_enable: "Você tem certeza de que quer reabilitar '%{consumer}' a fazer pedidos no grupo?" 
+          confirm_disable: "Você tem certeza de que quer desabilitar '%{consumer}' de fazer pedidos no grupo?"
+          confirm_enable: "Você tem certeza de que quer reabilitar '%{consumer}' a fazer pedidos no grupo?"
           tasks: "<strong>%{people} pessoas</strong> aguardam aprovação para entrar no grupo"
           manage: "Gerenciar"
           saved: "Salvo!"
@@ -486,6 +486,8 @@ pt-BR: &pt-BR
           rejection_message: "Por favor, explique por que você está rejeitando o pedido de filiação desse membro ao grupo."
           inactive: inativo
           active: ativo
+          filter: Filtro
+          select_hub: Selecione um núcleo
 
   orders_cycle_plugin:
     terms:
