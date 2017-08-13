@@ -277,7 +277,7 @@ class OrdersPlugin::Item < ApplicationRecord
 
     # Set flags according to past/future data
     # Present flags are used as classes
-    statuses_data.each.with_index do |(status, status_data), i|
+    statuses_data.each.with_index do |(_status, status_data), i|
       prev_status_data = statuses_data[statuses[i-1]] unless i.zero?
 
       if prev_status_data
@@ -295,7 +295,7 @@ class OrdersPlugin::Item < ApplicationRecord
     end
 
     # reverse_each is necessary to set overwritten with intermediate not_modified
-    statuses_data.reverse_each.with_index do |(status, status_data), i|
+    statuses_data.reverse_each.with_index do |(_status, status_data), i|
       prev_status_data = statuses_data[statuses[-i-1]]
       if status_data[:not_modified] or
           (prev_status_data and prev_status_data[:flags][:filled] and status_data[:quantity] != prev_status_data[:quantity])
