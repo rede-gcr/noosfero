@@ -1,7 +1,7 @@
 paths              = {}
 profile_format     = /#{Noosfero.identifier_format}/i
 plugins_root       = if Rails.env.test? then 'plugins' else '{baseplugins,config/plugins}' end
-controllers_paths  = "#{Rails.root}/#{plugins_root}/*/{app/,}controllers"
+plugins_paths      = "#{Rails.root}/#{plugins_root}/*/"
 prefixes_by_folder = {
   public:    'plugin',
   profile:   'profile(/:profile)/plugin',
@@ -9,56 +9,59 @@ prefixes_by_folder = {
   admin:     'admin/plugin',
 }
 
-Dir[controllers_paths].each do |controllers_dir|
-  plugin_name = File.basename File.dirname controllers_dir
+Dir[plugins_paths].each do |plugin_dir|
+  plugin_name       = File.basename plugin_dir
+  controllers_paths = "#{plugin_dir}/{app/,}controllers"
 
-  controllers_by_folder = prefixes_by_folder.keys.inject({}) do |hash, folder|
-    path = "#{controllers_dir}/#{folder}/"
-    hash[folder] = Dir.glob("#{path}{*.rb,#{plugin_name}_plugin/*.rb}").map do |filename|
-      filename.gsub(path, '').gsub(/[_\/]controller.rb$/, '')
+  Dir[controllers_paths].each do |controllers_dir|
+    controllers_by_folder = prefixes_by_folder.keys.inject({}) do |hash, folder|
+      path = "#{controllers_dir}/#{folder}/"
+      hash[folder] = Dir.glob("#{path}{*.rb,#{plugin_name}_plugin/*.rb}").map do |filename|
+        filename.gsub(path, '').gsub(/[_\/]controller.rb$/, '')
+      end
+      hash
     end
-    hash
-  end
 
-  controllers_by_folder.each do |folder, controllers|
-    controllers.each do |controller|
-      controller_name = controller.gsub(/#{plugin_name}_plugin[_\/]?/, '')
-      controller_path = if controller_name.present? then "/#{controller_name}" else '' end
+    controllers_by_folder.each do |folder, controllers|
+      controllers.each do |controller|
+        controller_name = controller.gsub(/#{plugin_name}_plugin[_\/]?/, '')
+        controller_path = if controller_name.present? then "/#{controller_name}" else '' end
 
-      as  = controller.tr '/','_'
-      url = "#{prefixes_by_folder[folder]}/#{plugin_name}#{controller_path}(/:action(/:id))"
+        as  = controller.tr '/','_'
+        url = "#{prefixes_by_folder[folder]}/#{plugin_name}#{controller_path}(/:action(/:id))"
 
-      paths[url] = {
-        controller: controller,
-        via:        :all,
-        as:         as,
-      }
-      paths[url][:profile] = profile_format if folder.to_s.in? %w[profile myprofile]
+        paths[url] = {
+          controller: controller,
+          via:        :all,
+          as:         as,
+        }
+        paths[url][:profile] = profile_format if folder.to_s.in? %w[profile myprofile]
+      end
     end
+
+    # DEPRECATED default controllers
+    paths.reverse_merge!(
+      "plugin/#{plugin_name}(/:action(/:id))" => {
+        controller: "#{plugin_name}_plugin",
+          via:        :all,
+      },
+      "admin/plugin/#{plugin_name}(/:action(/:id))" => {
+        controller: "#{plugin_name}_plugin_admin",
+          via:        :all,
+      },
+
+      "profile(/:profile)/plugin/#{plugin_name}(/:action(/:id))" => {
+        controller: "#{plugin_name}_plugin_profile",
+          via:        :all,
+          profile:    profile_format,
+      },
+      "myprofile(/:profile)/plugin/#{plugin_name}(/:action(/:id))" => {
+        controller: "#{plugin_name}_plugin_myprofile",
+          via:        :all,
+          profile:    profile_format,
+      },
+    )
   end
-
-  # DEPRECATED default controllers
-  paths.reverse_merge!(
-    "plugin/#{plugin_name}(/:action(/:id))" => {
-      controller: "#{plugin_name}_plugin",
-      via:        :all,
-    },
-    "admin/plugin/#{plugin_name}(/:action(/:id))" => {
-      controller: "#{plugin_name}_plugin_admin",
-      via:        :all,
-    },
-
-    "profile(/:profile)/plugin/#{plugin_name}(/:action(/:id))" => {
-      controller: "#{plugin_name}_plugin_profile",
-      via:        :all,
-      profile:    profile_format,
-    },
-    "myprofile(/:profile)/plugin/#{plugin_name}(/:action(/:id))" => {
-      controller: "#{plugin_name}_plugin_myprofile",
-      via:        :all,
-      profile:    profile_format,
-    },
-  )
 end
 
 Noosfero::Application.routes.draw do

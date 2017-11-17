@@ -77,6 +77,7 @@ module Noosfero
     # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
     config.i18n.available_locales = Noosfero.available_locales
     config.i18n.default_locale = nil
+    config.i18n.enforce_available_locales = false
 
     # Configure the default encoding used in templates for Ruby 1.9.
     config.encoding = "utf-8"

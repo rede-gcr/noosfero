@@ -1,11 +1,13 @@
-class StoresAppPlugin::CatalogSerializer < ApplicationSerializer
+module StoresAppPlugin
+  class CatalogSerializer < ApplicationSerializer
 
-  alias_method :profile, :object
+    alias_method :profile, :object
 
-  has_many :products, serializer: ProductSerializer
+    has_many :products, serializer: ProductSerializer
 
-  def products
-    profile.distributed_products.unarchived.available
+    def products
+      profile.products.supplied.unarchived.available
+    end
+
   end
-
 end

@@ -1,3 +1,5 @@
+require 'products_plugin'
+
 module ProductsPlugin
   class Product < ApplicationRecord
 
