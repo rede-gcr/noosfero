@@ -1,8 +1,11 @@
 module StoresAppPlugin
-  class ApiController < ::ApplicationController
+  class ApiController < ActionController::Base
+
+    attr_reader :environment
+    include NeedsProfile
 
     layout false
-
+    before_filter :set_environment
     needs_profile
     before_filter :allow_cors
 
@@ -13,6 +16,14 @@ module StoresAppPlugin
       headers['Access-Control-Allow-Methods']  = 'POST, PUT, DELETE, GET, OPTIONS'
       headers['Access-Control-Request-Method'] = '*'
       headers['Access-Control-Allow-Headers']  = 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+    end
+
+    def user
+      @user ||= User.find_by private_token: params[:auth_token]
+    end
+
+    def set_environment
+      @environment = Environment.default
     end
 
   end

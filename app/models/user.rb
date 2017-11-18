@@ -142,7 +142,7 @@ class User < ApplicationRecord
   validates_inclusion_of :terms_accepted, :in => [ '1' ], :if => lambda { |u| ! u.terms_of_use.blank? }, :message => N_('{fn} must be checked in order to signup.').fix_i18n
 
   scope :has_login?, lambda { |login,email,environment_id|
-    where('login = ? OR email = ?', login, email).
+    where('login = ? OR email = ? OR phone = ?', login, email, login).
     where(environment_id: environment_id)
   }
 
