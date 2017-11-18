@@ -26,10 +26,5 @@ module StoresAppPlugin
         .first
     end
 
-    def user
-      user = User.find_by email: 'brauliobo@gmail.com'
-      user.person
-    end
-
   end
 end
