@@ -54,14 +54,14 @@ import-modal.modal.fade tabindex="-1" role="dialog"
 
     confirmRemoveAll() {
       var input = $('input.remove_all_suppliers')[0]
-      if (input.check) 
+      if (input.check)
         input.check = confirm(t('views.product.import.confirm_remove_all'))
     }
 
     import() {
       var self = this
       var importUrl = Routes.suppliers_plugin_product_path({profile: noosfero.profile, action: 'import'})
-      
+
       data = new FormData();
       data.append( 'csv',                  $('input.csv')[0].files[0]               )
       data.append( 'remove_all_suppliers', $('input.remove_all_suppliers')[0].value )
