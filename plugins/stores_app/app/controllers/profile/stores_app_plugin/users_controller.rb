@@ -4,7 +4,7 @@ module StoresAppPlugin
     def signin
       @user = User.authenticate params[:login], params[:password]
       if @user
-        render json: {auth_token: @user.private_token}
+        render json: UserSerializer.new(@user).to_hash
       else
         render json: {error: 'invalid_login_pass'}
       end
