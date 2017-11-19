@@ -346,10 +346,6 @@ GEM
     pry-rails (0.3.6)
       pry (>= 0.10.4)
     public_suffix (2.0.5)
-    puma (3.8.2)
-    puma_worker_killer (0.1.0)
-      get_process_mem (~> 0.2)
-      puma (>= 2.7, < 4)
     rack (1.6.8)
     rack-accept (0.4.5)
       rack (>= 0.4)
@@ -416,7 +412,7 @@ GEM
       execjs (~> 2)
       rails (>= 3.0, < 6.0)
     rmagick (2.16.0)
-    rollbar (2.14.1)
+    rollbar (2.15.0)
       multi_json
     rspec (3.6.0)
       rspec-core (~> 3.6.0)
@@ -589,7 +585,6 @@ DEPENDENCIES
   protected_attributes
   pry
   pry-rails
-  puma_worker_killer
   rack-contrib
   rack-cors
   rack-timeout
@@ -632,4 +627,4 @@ DEPENDENCIES
   xss_terminate (= 0.0.0)!
 
 BUNDLED WITH
-   1.14.6
+   1.15.4

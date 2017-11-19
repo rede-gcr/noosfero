@@ -196,7 +196,7 @@ en-US: &en-US
         close: "close"
         stock_modal: "Inventory movimentation"
         action: "Action"
-        quantity: "Quantity" 
+        quantity: "Quantity"
         description: "description"
         the_description: "Describe the movimentation. Ex: remotion of 2 boxes to distribution"
         adition: adition
@@ -462,6 +462,8 @@ en-US: &en-US
           rejection_message: "Please, explanain why you are rejecting this membership request"
           inactive: inactive
           active: active
+          filter: Filter
+          select_hub: Select a hub
 
   orders_cycle_plugin:
     terms:

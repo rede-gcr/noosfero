@@ -90,6 +90,7 @@ pt-BR: &pt-BR
         total_price_without_margin: "Valor total sem a margem"
         total_value: "total pago"
         un: un.
+        unit: unidade
         value: Valor
         value_parcel: "Valor usando estoque"
         phone: 'Telefone'

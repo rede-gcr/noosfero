@@ -14,7 +14,7 @@ product-modal.modal.fade tabindex="-1" role="dialog"
               |{product.name}
             h1.title if="{!product.id}"
               |{t('views.product.add_product')}
-  
+
       .modal-body
         .row
           .col-xs-12.col-md-5
@@ -31,7 +31,8 @@ product-modal.modal.fade tabindex="-1" role="dialog"
                   |{t("views.product.product_name")}
                 small.title if="{product.id}"
                   |{t("views.product.name_change_warning")}
-                input type="text" value="{product.name}" id="p-name"
+                input type="text" value="{product.name}" id="p-name" name='name'
+
                 small.supplier_product_name show="{product.supplier_product_name != product.name && product.supplier_product_name != undefined}"
                   strong
                     |{t("views.product.supplier_product_name")}
@@ -44,8 +45,8 @@ product-modal.modal.fade tabindex="-1" role="dialog"
               .form-group
                 label for="p-description"
                   |{t("views.product.description")}
-                textarea value="{product.description}" id="p-description"
-                
+                textarea value="{product.description}" id="p-description" name='description'
+
               .form-group
                 label for="p-product_category_id"
                   |{t("views.product.category")}
@@ -107,7 +108,7 @@ product-modal.modal.fade tabindex="-1" role="dialog"
           |{t('views.product.remove')}
         span.warning if="{product.id}"
           |{t('views.product.remove_warning')}
-          
+
 
   javascript:
     this.t = window.products.t
@@ -116,6 +117,12 @@ product-modal.modal.fade tabindex="-1" role="dialog"
       this.parent.typeaheadCategoryInit($('#p-product_category_id'), this.setCategory)
       this.parent.typeaheadUnitInit($('#p-unit_id'), this.setUnit)
     })
+
+    updateFormValues() {
+      $(this.root).find('input,textarea').each(function (i,el) {
+        el.value = el.getAttribute('value')
+      })
+    }
 
     setCategory(e, item) {
       this.product.product_category_id             = item.id
@@ -151,7 +158,7 @@ product-modal.modal.fade tabindex="-1" role="dialog"
         keys.push('supplier_id')
 
       var self = this;
-      
+
       keys.forEach(function(key) {
         var input = self["p-"+key];
 
@@ -220,14 +227,14 @@ product-modal.modal.fade tabindex="-1" role="dialog"
 
     validate() {
       var keys = ['name', "supplier_id",'product_category_id']
-      
+
       for (var i in keys) {
         var input = this["p-"+keys[i]]
 
         if (keys[i] == 'supplier_id' && this.product.id)
           continue;
         // to validate category need to see the id instead of the input
-        if (keys[i] == 'product_category_id' && !this.product.product_category_id)
+        if (keys[i] == 'product_category_id' && typeof(this.product.product_category_id) == "string")
           input.value = ""
         if (input.value.trim() == "" || input.value == "0") {
           alert(this.t('views.product.validation_error_'+keys[i]))
@@ -241,7 +248,7 @@ product-modal.modal.fade tabindex="-1" role="dialog"
     saveImage() {
       var self = this
       var saveUrl = Routes.suppliers_plugin_product_path({profile: noosfero.profile, action: 'set_image/'+this.product.id})
-      
+
       data = new FormData();
       data.append('image_builder', $('#image')[0].files[0])
       var opts = {
