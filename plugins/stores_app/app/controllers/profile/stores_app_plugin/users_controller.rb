@@ -8,6 +8,8 @@ module StoresAppPlugin
       else
         render json: {error: 'invalid_login_pass'}
       end
+    rescue # empty fields
+      render json: {error: 'invalid_login_pass'}
     end
 
     def signup
@@ -29,6 +31,7 @@ module StoresAppPlugin
           @user.person.user = @user
           @user.person.save!
         end
+        @user.activate
         profile.add_member @user.person
 
         render json: UserSerializer.new(@user).to_hash
