@@ -26,5 +26,12 @@ module StoresAppPlugin
       @environment = Environment.default
     end
 
+    def order
+      @order ||= profile.sales
+        .where(consumer_id: user.person.id)
+        .order('created_at DESC')
+        .first
+    end
+
   end
 end
