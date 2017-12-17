@@ -9,11 +9,12 @@ module ConsumersCoopPlugin::LayoutHelper
     volunteering: [{controller: :consumers_coop_plugin_volunteers, action: :index}, nil, -> { profile.volunteers_settings.cycle_volunteers_enabled }],
     #products: [{controller: :catalog, action: :index}, nil, -> { profile.enterprise? }],
     separator: [{}],
-    orders_cycles: [{:controller => :consumers_coop_plugin_cycle, :action => :index}, nil, -> { profile.has_admin? user }],
-    products: [{:controller => :consumers_coop_plugin_product, :action => :index}, nil, -> { profile.has_admin? user }],
-    suppliers: [{:controller => :consumers_coop_plugin_supplier, :action => :index}, nil, -> { profile.has_admin? user }],
-    consumers: [{:controller => :consumers_coop_plugin_consumer, :action => :index}, nil, -> { profile.has_admin? user }],
-    settings: [{:controller => :consumers_coop_plugin_myprofile, :action => :settings}, nil, -> { profile.has_admin? user }],
+    orders_cycles: [{controller: :consumers_coop_plugin_cycle, action: :index}, nil, -> { profile.has_admin? user }],
+    products: [{controller: :consumers_coop_plugin_product, action: :index}, nil, -> { profile.has_admin? user }],
+    suppliers: [{controller: :consumers_coop_plugin_supplier, action: :index}, nil, -> { profile.has_admin? user }],
+    consumers: [{controller: :consumers_coop_plugin_consumer, action: :index}, nil, -> { profile.has_admin? user }],
+    delivery_methods: [{controller: 'consumers_coop_plugin/delivery_methods', action: :index}, nil, -> { profile.has_admin? user }],
+    settings: [{controller: :consumers_coop_plugin_myprofile, action: :settings}, nil, -> { profile.has_admin? user }],
   }
   #TODO: Add leave/join and remove existing profile_info block
 

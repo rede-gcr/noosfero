@@ -13,6 +13,7 @@ pt-BR: &pt-BR
         leave: Sair da comunidade
         suppliers: Fornecedores
         consumers: Consumidores
+        delivery_methods: Métodos de entrega
         settings: Configurações
 
     controllers:
